@@ -31,6 +31,7 @@ void printNode(struct Node *node);
 void printNodeByKey(int key, struct HashMap *hashMap);
 void printHashMap(struct HashMap *hashmap);
 void printBucket(struct HashMap *hashmap, int bucketNum);
+void freeHashmap(struct HashMap *hashmap);
 #ifndef HASHMAP_MAIN_H
 #define HASHMAP_MAIN_H
 

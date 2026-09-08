@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 int main(void) {
-    int num = 2000;
+    int num = 200000000;
     struct HashMap hashMap = makeHashMap(num);
     for (int i = 0; i < num; i++) {
         addNode(i, (int)(rand() * 10), &hashMap);
@@ -14,7 +14,7 @@ int main(void) {
     //     printBucket(&hashMap, i);
     // }
     printf("Buffer size: %zu", hashMap.size);
-
+    freeHashMap(&hashMap);
 }
 
 typedef struct Node * Bucket;
@@ -155,4 +155,13 @@ Bucket *getHeadNode(int key, struct HashMap *hashMap) {
     Bucket * buff = (struct Node **)(hashMap->buffer);
     int offset = key % (hashMap->numBuckets);
     return buff + offset;
+}
+
+void freeHashMap(struct HashMap *hashMap) {
+    free(hashMap->buffer);
+    hashMap->buffer = NULL;
+    hashMap->size = 0;
+    hashMap->unalloc = NULL;
+    hashMap->numNodes = 0;
+    hashMap->numBuckets = 0;
 }
