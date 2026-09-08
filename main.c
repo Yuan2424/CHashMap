@@ -4,36 +4,33 @@
 #include <stdlib.h>
 
 int main(void) {
-    int num = 20;
+    int num = 2000;
     struct HashMap hashMap = makeHashMap(num);
     for (int i = 0; i < num; i++) {
         addNode(i, (int)(rand() * 10), &hashMap);
     }
-    //struct Result r = getValue(5, &hashMap);
-    for (int i = 0; i < hashMap.numBuckets; i++) {
-        printBucket(&hashMap, i);
-    }
-    printf("The code has reached this Yay");
-    // if (r.foundValue) {
-    //     printf("The value is %d.", r.value);
-    //     return 0;
+    // for (int i = 0; i < hashMap.numBuckets; i++) {
+    //     printf("Bucket start \n");
+    //     printBucket(&hashMap, i);
     // }
-    // printf("The value was not found.");
-    // return 1;
+    printf("Buffer size: %zu", hashMap.size);
+
 }
+
+typedef struct Node * Bucket;
 
 struct HashMap makeHashMap(int num) {
     struct HashMap hashMap;
     hashMap.numNodes = num;
     hashMap.numBuckets = num / 3;
-    hashMap.size = sizeof(struct Node *) * hashMap.numBuckets +
+    hashMap.size = sizeof(Bucket) * hashMap.numBuckets +
         sizeof(struct Node) * hashMap.numNodes;
     hashMap.buffer = malloc(hashMap.size);
     hashMap.unalloc = hashMap.buffer + sizeof(struct Node *) * hashMap.numBuckets;
     
     // struct Node ** because there are pointers being stored, therefore we need pointers to those pointers
     for (int i = 0; i < hashMap.numBuckets; i++) {
-        ((struct Node **) (hashMap.buffer))[i] = NULL;
+        ((Bucket *) (hashMap.buffer))[i] = NULL;
     }
 
     return hashMap;
@@ -48,8 +45,9 @@ int addNode(int key, int val, struct HashMap *hashMap) {
     // that it is greater than the unallocated slot with an additional space
     if (hashMap->buffer + hashMap->size > (void *)(hashMap->unalloc + 1)) {
         *(hashMap -> unalloc) = node;
-        hashMap->unalloc++;
+
         struct Node *currentNode = hashMap->unalloc;
+        hashMap->unalloc++;
         // ADDING THE NODE TO A BUCKET
         struct Node **head = getHeadNode(key, hashMap);
             //The head is of type Node ** because it represents a pointer to the start of the buffer, containing pointers to the nodes
@@ -62,6 +60,7 @@ int addNode(int key, int val, struct HashMap *hashMap) {
         // if there is a head node, use a while to traverse from node to node
         else {
             struct Node *current = *head;
+            if (current == NULL) return 1;
             while (current->next != NULL) {
                 current = current->next;
             }
@@ -78,7 +77,7 @@ struct Node *getNode(int key, struct HashMap *hashMap) {
         return NULL;
     }
     struct Node *current = *head;
-    while (current->next != NULL) {
+    while (current != NULL) {
         if (current->key == key) {
             return current;
         }
@@ -143,16 +142,17 @@ void printHashMap(struct HashMap *hashmap) {
 }
 
 void printBucket(struct HashMap *hashmap, int bucketNum) {
-    struct Node **head = hashmap->buffer + bucketNum;
+    struct Node **head = (struct Node **)hashmap->buffer + bucketNum;
     struct Node *current = *head;
-    while (current->next != NULL) {
+    if (current == NULL) return;
+    while (current != NULL) {
         printNode(current);
         current = current->next;
     }
 }
 
-struct Node **getHeadNode(int key, struct HashMap *hashMap) {
-    struct Node ** buff = (struct Node **)(hashMap->buffer);
+Bucket *getHeadNode(int key, struct HashMap *hashMap) {
+    Bucket * buff = (struct Node **)(hashMap->buffer);
     int offset = key % (hashMap->numBuckets);
     return buff + offset;
 }
