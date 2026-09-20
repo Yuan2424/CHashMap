@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 int main(void) {
-    int num = 200000000;
-    struct HashMap hashMap = makeHashMap(num);
+    int num = 2000;
+    struct HashMap hashMap = makeHashMap(num, 3);
     for (int i = 0; i < num; i++) {
         addNode(i, (int)(rand() * 10), &hashMap);
     }
@@ -13,16 +13,21 @@ int main(void) {
     //     printf("Bucket start \n");
     //     printBucket(&hashMap, i);
     // }
-    printf("Buffer size: %zu", hashMap.size);
+    printf("Buffer size: %zu \n", hashMap.size);
+    printf("Node size: %zu \n", sizeof(struct Node));
+    printf("struct Node * size: %zu \n", sizeof(struct Node *));
+    printf("Number of buckets: %d \n" , hashMap.numBuckets);
+    expandMap(&hashMap, 4000, 3);
+    printf("Number of buckets: %d \n" , hashMap.numBuckets);
     freeHashMap(&hashMap);
 }
 
 typedef struct Node * Bucket;
 
-struct HashMap makeHashMap(int num) {
+struct HashMap makeHashMap(int num, int bucketFactor) {
     struct HashMap hashMap;
     hashMap.numNodes = num;
-    hashMap.numBuckets = num / 3;
+    hashMap.numBuckets = num / bucketFactor;
     hashMap.size = sizeof(Bucket) * hashMap.numBuckets +
         sizeof(struct Node) * hashMap.numNodes;
     hashMap.buffer = malloc(hashMap.size);
@@ -164,4 +169,15 @@ void freeHashMap(struct HashMap *hashMap) {
     hashMap->unalloc = NULL;
     hashMap->numNodes = 0;
     hashMap->numBuckets = 0;
+}
+
+void expandMap(struct HashMap *map, int num, int newFactor) {
+    struct HashMap newHashMap = makeHashMap(num, newFactor);
+    Bucket * temp = (Bucket *)(map->buffer) + map->numBuckets;
+    void * newUnalloc = (void *)temp;
+    struct Node * start = (struct Node *)newUnalloc;
+    for (int i = 0; i < map->numNodes; i++) {
+        addNode(start[i].key, start[i].value, &newHashMap);
+    }
+    *map = newHashMap;
 }
