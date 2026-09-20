@@ -26,11 +26,12 @@ typedef struct Node * Bucket;
 
 struct HashMap makeHashMap(int num, int bucketFactor) {
     struct HashMap hashMap;
-    hashMap.numNodes = num;
+    hashMap.nodeCapacity = num;
     hashMap.numBuckets = num / bucketFactor;
     hashMap.size = sizeof(Bucket) * hashMap.numBuckets +
-        sizeof(struct Node) * hashMap.numNodes;
+        sizeof(struct Node) * hashMap.nodeCapacity;
     hashMap.buffer = malloc(hashMap.size);
+    hashMap.usedNodes = 0;
     hashMap.unalloc = hashMap.buffer + sizeof(struct Node *) * hashMap.numBuckets;
     
     // struct Node ** because there are pointers being stored, therefore we need pointers to those pointers
@@ -71,6 +72,7 @@ int addNode(int key, int val, struct HashMap *hashMap) {
             }
             current->next = currentNode;
         }
+        hashMap->usedNodes++;
         return 0;
     }
     return 1;
@@ -167,7 +169,7 @@ void freeHashMap(struct HashMap *hashMap) {
     hashMap->buffer = NULL;
     hashMap->size = 0;
     hashMap->unalloc = NULL;
-    hashMap->numNodes = 0;
+    hashMap->nodeCapacity = 0;
     hashMap->numBuckets = 0;
 }
 
@@ -176,8 +178,9 @@ void expandMap(struct HashMap *map, int num, int newFactor) {
     Bucket * temp = (Bucket *)(map->buffer) + map->numBuckets;
     void * newUnalloc = (void *)temp;
     struct Node * start = (struct Node *)newUnalloc;
-    for (int i = 0; i < map->numNodes; i++) {
+    for (int i = 0; i < map->usedNodes; i++) { // This is causing an off-by-one error (fix by doing i < map->numNodes - 1)
         addNode(start[i].key, start[i].value, &newHashMap);
     }
+    freeHashMap(map);
     *map = newHashMap;
 }

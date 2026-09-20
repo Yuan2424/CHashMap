@@ -14,7 +14,8 @@ struct HashMap {
     void *buffer;
     size_t size; // Total size of the hash map
     struct Node *unalloc;
-    int numNodes; // Number of nodes currently present
+    int nodeCapacity; // Number of nodes(max capacity)
+    int usedNodes;
     int numBuckets;
 };
 
